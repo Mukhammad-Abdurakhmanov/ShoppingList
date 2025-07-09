@@ -60,6 +60,7 @@ class ShopItemViewModel: ViewModel() {
                 val item = it.copy(name = name, count = count)
                 editShopItemUseCase.editShopItem(item)
                 finishWork()
+                // Line to commit
             }
 
         }
