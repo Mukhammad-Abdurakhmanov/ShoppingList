@@ -7,6 +7,8 @@ import androidx.lifecycle.ViewModelProvider
 import androidx.recyclerview.widget.ItemTouchHelper
 import androidx.recyclerview.widget.RecyclerView
 import com.example.shoppinglist.R
+import com.example.shoppinglist.presentation.ShopItemActivity.Companion.newIntentEditItem
+import com.google.android.material.floatingactionbutton.FloatingActionButton
 
 private lateinit var viewModel: MainViewModel
 private lateinit var shopListAdapter: ShopListAdapter
@@ -16,13 +18,24 @@ class MainActivity : AppCompatActivity() {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
         setupRecyclerView()
+        // ViewModelProvider(this) даёт MainViewModel, привязанный к Activity,
+        // чтобы он переживал переворот экрана и хранил данные
         viewModel = ViewModelProvider(this)[MainViewModel::class.java]
+
+        //Подписываешься на LiveData,
+        // чтобы обновлять список на экране каждый раз, когда shopList изменится
         viewModel.shopList.observe(this) {
             shopListAdapter.submitList(it)
         }
-    }
 
-    private fun setupRecyclerView(){
+        val buttonAddItem = findViewById<FloatingActionButton>(R.id.button_add_shop_item)
+        buttonAddItem.setOnClickListener {
+            val intent = ShopItemActivity.newIntentAddItem(this)
+            startActivity(intent)
+        }
+    }
+    // Настройка Списка
+    private fun setupRecyclerView() {
         val rvShopList = findViewById<RecyclerView>(R.id.rv_shop_list)
         with(rvShopList) {
             shopListAdapter = ShopListAdapter()
@@ -43,11 +56,15 @@ class MainActivity : AppCompatActivity() {
         setupSwipeListener(rvShopList)
     }
 
+    // Свайр для удаления
     private fun setupSwipeListener(rvShopList: RecyclerView) {
+
+        //Создаём ItemTouchHelper, который реагирует на свайпы влево и вправо
         val callback = object : ItemTouchHelper.SimpleCallback(
             0,
             ItemTouchHelper.LEFT or ItemTouchHelper.RIGHT
         ) {
+            //Движение вверх/вниз отключено, поэтому возвращаем false.
             override fun onMove(
                 recyclerView: RecyclerView,
                 viewHolder: RecyclerView.ViewHolder,
@@ -62,23 +79,26 @@ class MainActivity : AppCompatActivity() {
             }
         }
 
+        //Подключаем свайпы к RecyclerView
         val itemTouchHelper = ItemTouchHelper(callback)
         itemTouchHelper.attachToRecyclerView(rvShopList)
     }
-
+    // Обрабатываем клик по элементу списка
     private fun setupClickListener() {
         shopListAdapter.onShopItemClickListener = {
             Log.d("MainActivity", it.toString())
+            val intent = newIntentEditItem(this, it.id)
+            startActivity(intent)
         }
     }
 
+    // Обрабатываем ДОЛГИЙ клик по элементу списка
     private fun setupLongClickListener() {
         shopListAdapter.onShopItemLongClickListener = {
             viewModel.changeEnableState(it)
         }
     }
 }
-
 
 
 //  Ненужная реализация списка через Linear Layout
