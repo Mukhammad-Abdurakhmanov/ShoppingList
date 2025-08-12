@@ -2,7 +2,11 @@ package com.example.shoppinglist.presentation
 
 import android.os.Bundle
 import android.util.Log
+import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
+import androidx.fragment.app.Fragment
+import androidx.fragment.app.FragmentContainer
+import androidx.fragment.app.FragmentContainerView
 import androidx.lifecycle.ViewModelProvider
 import androidx.recyclerview.widget.ItemTouchHelper
 import androidx.recyclerview.widget.RecyclerView
@@ -12,8 +16,9 @@ import com.google.android.material.floatingactionbutton.FloatingActionButton
 
 private lateinit var viewModel: MainViewModel
 private lateinit var shopListAdapter: ShopListAdapter
+private var shopItemContainer: FragmentContainerView? = null
 
-class MainActivity : AppCompatActivity() {
+class MainActivity : AppCompatActivity(), ShopItemFragment.OnEditingFinishedListener {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
@@ -34,6 +39,25 @@ class MainActivity : AppCompatActivity() {
             startActivity(intent)
         }
     }
+
+    override fun onEditingFinished() {
+        Toast.makeText(this@MainActivity, "Success", Toast.LENGTH_SHORT).show()
+        supportFragmentManager.popBackStack()
+    }
+
+    // Метод для определения режима работы("в одну колонку")
+    private fun isOnePaneMode(): Boolean{
+        return shopItemContainer == null
+    }
+
+    private fun launchFragment(fragment: Fragment){
+        if (shopItemContainer!=null){
+            supportFragmentManager.beginTransaction()
+                .replace(R.id.shop_item_container, fragment)
+                .commit()
+        }
+    }
+
     // Настройка Списка
     private fun setupRecyclerView() {
         val rvShopList = findViewById<RecyclerView>(R.id.rv_shop_list)
