@@ -5,12 +5,12 @@ import android.util.Log
 import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
 import androidx.fragment.app.Fragment
-import androidx.fragment.app.FragmentContainer
 import androidx.fragment.app.FragmentContainerView
 import androidx.lifecycle.ViewModelProvider
 import androidx.recyclerview.widget.ItemTouchHelper
 import androidx.recyclerview.widget.RecyclerView
 import com.example.shoppinglist.R
+import com.example.shoppinglist.domain.ShopItem
 import com.example.shoppinglist.presentation.ShopItemActivity.Companion.newIntentEditItem
 import com.google.android.material.floatingactionbutton.FloatingActionButton
 
@@ -29,8 +29,8 @@ class MainActivity : AppCompatActivity(), ShopItemFragment.OnEditingFinishedList
 
         //Подписываешься на LiveData,
         // чтобы обновлять список на экране каждый раз, когда shopList изменится
-        viewModel.shopList.observe(this) {
-            shopListAdapter.submitList(it)
+        viewModel.shopListLiveData.observe(this) { list: List<ShopItem> ->
+            shopListAdapter.submitList(list)
         }
 
         val buttonAddItem = findViewById<FloatingActionButton>(R.id.button_add_shop_item)
@@ -62,7 +62,10 @@ class MainActivity : AppCompatActivity(), ShopItemFragment.OnEditingFinishedList
     private fun setupRecyclerView() {
         val rvShopList = findViewById<RecyclerView>(R.id.rv_shop_list)
         with(rvShopList) {
-            shopListAdapter = ShopListAdapter()
+            shopListAdapter = ShopListAdapter(
+                onShopItemClickListener =  { item: ShopItem -> setupClickListener(item) },
+                onShopItemLongClickListener = {item: ShopItem -> setupLongClickListener(item)}
+            )
             adapter = shopListAdapter
             recycledViewPool.setMaxRecycledViews(
                 ShopListAdapter.VIEW_TYPE_ENABLED,
@@ -73,9 +76,6 @@ class MainActivity : AppCompatActivity(), ShopItemFragment.OnEditingFinishedList
                 ShopListAdapter.MAX_POOL_SIZE
             )
         }
-        setupLongClickListener()
-
-        setupClickListener()
 
         setupSwipeListener(rvShopList)
     }
@@ -108,19 +108,15 @@ class MainActivity : AppCompatActivity(), ShopItemFragment.OnEditingFinishedList
         itemTouchHelper.attachToRecyclerView(rvShopList)
     }
     // Обрабатываем клик по элементу списка
-    private fun setupClickListener() {
-        shopListAdapter.onShopItemClickListener = {
-            Log.d("MainActivity", it.toString())
-            val intent = newIntentEditItem(this, it.id)
-            startActivity(intent)
-        }
+    private fun setupClickListener(item: ShopItem) {
+        Log.d("MainActivity", item.toString())
+        val intent = newIntentEditItem(this, item.id)
+        startActivity(intent)
     }
 
     // Обрабатываем ДОЛГИЙ клик по элементу списка
-    private fun setupLongClickListener() {
-        shopListAdapter.onShopItemLongClickListener = {
-            viewModel.changeEnableState(it)
-        }
+    private fun setupLongClickListener(item: ShopItem) {
+        viewModel.changeEnableState(item)
     }
 }
 
