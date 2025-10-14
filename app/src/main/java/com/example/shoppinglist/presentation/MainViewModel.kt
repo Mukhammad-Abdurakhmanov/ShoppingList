@@ -1,6 +1,6 @@
 package com.example.shoppinglist.presentation
 
-import androidx.lifecycle.MutableLiveData
+import androidx.lifecycle.LiveData
 import androidx.lifecycle.ViewModel
 import com.example.shoppinglist.data.ShopListRepositoryImpl
 import com.example.shoppinglist.domain.DeleteShopItemUseCase
@@ -16,7 +16,7 @@ class MainViewModel: ViewModel() {
     private val deleteShopItemUseCase = DeleteShopItemUseCase(repository)
     private val editShopItemUseCase = EditShopItemUseCase(repository)
 
-    val shopList = getShopListUseCase.getShopList()
+    val shopListLiveData: LiveData<List<ShopItem>> = getShopListUseCase.getShopList()
 
     fun deleteShopItem(shopItem: ShopItem){
         deleteShopItemUseCase.deleteShopItem(shopItem)

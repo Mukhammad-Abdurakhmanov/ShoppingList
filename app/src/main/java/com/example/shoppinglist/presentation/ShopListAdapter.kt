@@ -6,11 +6,12 @@ import androidx.recyclerview.widget.ListAdapter
 import com.example.shoppinglist.R
 import com.example.shoppinglist.domain.ShopItem
 
-class ShopListAdapter :
-    ListAdapter<ShopItem, ShopItemViewHolder>(ShopItemDiffCallback()) {
+private typealias ShopItemClickListener = (ShopItem) -> Unit
 
-    var onShopItemLongClickListener: ((ShopItem) -> Unit)? = null
-    var onShopItemClickListener: ((ShopItem) -> Unit)? = null
+class ShopListAdapter(
+    private val onShopItemLongClickListener: ShopItemClickListener,
+    private val onShopItemClickListener: ShopItemClickListener,
+) : ListAdapter<ShopItem, ShopItemViewHolder>(ShopItemDiffCallback()) {
 
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): ShopItemViewHolder {
         val layout = when (viewType) {
@@ -26,11 +27,11 @@ class ShopListAdapter :
     override fun onBindViewHolder(viewHolder: ShopItemViewHolder, position: Int) {
         val shopItem = getItem(position)
         viewHolder.view.setOnLongClickListener {
-            onShopItemLongClickListener?.invoke(shopItem)
+            onShopItemLongClickListener.invoke(shopItem)
             true
         }
         viewHolder.view.setOnClickListener {
-            onShopItemClickListener?.invoke(shopItem)
+            onShopItemClickListener.invoke(shopItem)
         }
         viewHolder.tvName.text = shopItem.name
         viewHolder.tvCount.text = shopItem.count.toString()
@@ -46,13 +47,9 @@ class ShopListAdapter :
 
     }
 
-
-
-
     companion object {
         const val VIEW_TYPE_ENABLED = 100
         const val VIEW_TYPE_DISABLED = 101
         const val MAX_POOL_SIZE = 15
     }
-
 }
