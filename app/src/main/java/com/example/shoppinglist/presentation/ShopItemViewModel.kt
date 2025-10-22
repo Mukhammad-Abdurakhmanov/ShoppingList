@@ -1,5 +1,7 @@
 package com.example.shoppinglist.presentation
 
+import android.app.Application
+import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
@@ -8,14 +10,20 @@ import com.example.shoppinglist.domain.AddShopItemUseCase
 import com.example.shoppinglist.domain.EditShopItemUseCase
 import com.example.shoppinglist.domain.GetShopItemUseCase
 import com.example.shoppinglist.domain.ShopItem
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.cancel
+import kotlinx.coroutines.launch
 
-class ShopItemViewModel: ViewModel() {
+class ShopItemViewModel(application: Application) : AndroidViewModel(application) {
 
-    private val repository = ShopListRepositoryImpl
+    private val repository = ShopListRepositoryImpl(application)
 
     private val getShopItemUseCase = GetShopItemUseCase(repository)
     private val addShopItemUseCase = AddShopItemUseCase(repository)
     private val editShopItemUseCase = EditShopItemUseCase(repository)
+
+    private val scope = CoroutineScope(Dispatchers.IO)
 
     private val _errorInputName = MutableLiveData<Boolean>()
     val errorInputName: LiveData<Boolean>
@@ -35,42 +43,48 @@ class ShopItemViewModel: ViewModel() {
 
 
     fun getShopItem(shopItemId: Int) {
-        val item = getShopItemUseCase.getShopItem(shopItemId)
-        _shopItem.value = item
-    }
-
-    fun addShopItem(inputName: String?, inputCount: String?){
-        val name = parseName(inputName)
-        val count = parseCount(inputCount)
-        val fieldsValid = validateInput(name, count)
-        if (fieldsValid){
-            val shopItem = ShopItem(name, count, true)
-            addShopItemUseCase.addShopItem(shopItem)
-            finishWork()
+        scope.launch {
+            val item = getShopItemUseCase.getShopItem(shopItemId)
+            _shopItem.postValue(item)
         }
-
     }
 
-    fun editShopItem(inputName: String?, inputCount: String?){
+    fun addShopItem(inputName: String?, inputCount: String?) {
+
         val name = parseName(inputName)
         val count = parseCount(inputCount)
         val fieldsValid = validateInput(name, count)
-        if (fieldsValid){
-            _shopItem.value?.let {
-                val item = it.copy(name = name, count = count)
-                editShopItemUseCase.editShopItem(item)
+        if (fieldsValid) {
+            scope.launch {
+                val shopItem = ShopItem(name, count, true)
+                addShopItemUseCase.addShopItem(shopItem)
                 finishWork()
-                // Line to commit
             }
-
         }
     }
 
-    private fun parseName(inputName: String?): String{
+    fun editShopItem(inputName: String?, inputCount: String?) {
+
+        val name = parseName(inputName)
+        val count = parseCount(inputCount)
+        val fieldsValid = validateInput(name, count)
+        if (fieldsValid) {
+            scope.launch {
+                _shopItem.value?.let {
+                    val item = it.copy(name = name, count = count)
+                    editShopItemUseCase.editShopItem(item)
+                    finishWork()
+                    // Line to commit
+                }
+            }
+        }
+    }
+
+    private fun parseName(inputName: String?): String {
         return inputName?.trim() ?: ""
     }
 
-    private fun parseCount(inputCount: String?): Int{
+    private fun parseCount(inputCount: String?): Int {
         return try {
             inputCount?.trim()?.toInt() ?: 0
         } catch (e: Exception) {
@@ -78,29 +92,34 @@ class ShopItemViewModel: ViewModel() {
         }
     }
 
-    private fun validateInput(name: String, count: Int): Boolean{
+    private fun validateInput(name: String, count: Int): Boolean {
         var result = true
-        if (name.isBlank()){
+        if (name.isBlank()) {
             _errorInputName.value = true
             result = false
         }
-        if (count <= 0){
+        if (count <= 0) {
             _errorInputCount.value = true
             result = false
         }
         return result
     }
 
-        fun resetErrorInputName() {
-            _errorInputName.value = false
-        }
+    fun resetErrorInputName() {
+        _errorInputName.value = false
+    }
 
-        fun resetErrorInputCount() {
-            _errorInputCount.value = false
-        }
+    fun resetErrorInputCount() {
+        _errorInputCount.value = false
+    }
 
-    private fun finishWork(){
-        _shouldCloseScreen.value = Unit
+    private fun finishWork() {
+        _shouldCloseScreen.postValue(Unit)
+    }
+
+    override fun onCleared() {
+        super.onCleared()
+        scope.cancel()
     }
 
 }

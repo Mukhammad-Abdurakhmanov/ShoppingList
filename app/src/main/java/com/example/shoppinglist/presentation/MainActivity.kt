@@ -10,18 +10,20 @@ import androidx.lifecycle.ViewModelProvider
 import androidx.recyclerview.widget.ItemTouchHelper
 import androidx.recyclerview.widget.RecyclerView
 import com.example.shoppinglist.R
+import com.example.shoppinglist.databinding.ActivityMainBinding
 import com.example.shoppinglist.domain.ShopItem
 import com.example.shoppinglist.presentation.ShopItemActivity.Companion.newIntentEditItem
 import com.google.android.material.floatingactionbutton.FloatingActionButton
 
 private lateinit var viewModel: MainViewModel
 private lateinit var shopListAdapter: ShopListAdapter
-private var shopItemContainer: FragmentContainerView? = null
+private lateinit var binding: ActivityMainBinding
 
 class MainActivity : AppCompatActivity(), ShopItemFragment.OnEditingFinishedListener {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        setContentView(R.layout.activity_main)
+        binding = ActivityMainBinding.inflate(layoutInflater)
+        setContentView(binding.root)
         setupRecyclerView()
         // ViewModelProvider(this) даёт MainViewModel, привязанный к Activity,
         // чтобы он переживал переворот экрана и хранил данные
@@ -33,8 +35,7 @@ class MainActivity : AppCompatActivity(), ShopItemFragment.OnEditingFinishedList
             shopListAdapter.submitList(list)
         }
 
-        val buttonAddItem = findViewById<FloatingActionButton>(R.id.button_add_shop_item)
-        buttonAddItem.setOnClickListener {
+        binding.buttonAddShopItem.setOnClickListener {
             val intent = ShopItemActivity.newIntentAddItem(this)
             startActivity(intent)
         }
@@ -60,8 +61,7 @@ class MainActivity : AppCompatActivity(), ShopItemFragment.OnEditingFinishedList
 
     // Настройка Списка
     private fun setupRecyclerView() {
-        val rvShopList = findViewById<RecyclerView>(R.id.rv_shop_list)
-        with(rvShopList) {
+        with(binding.rvShopList) {
             shopListAdapter = ShopListAdapter(
                 onShopItemClickListener =  { item: ShopItem -> setupClickListener(item) },
                 onShopItemLongClickListener = {item: ShopItem -> setupLongClickListener(item)}
@@ -77,7 +77,7 @@ class MainActivity : AppCompatActivity(), ShopItemFragment.OnEditingFinishedList
             )
         }
 
-        setupSwipeListener(rvShopList)
+        setupSwipeListener(binding.rvShopList)
     }
 
     // Свайр для удаления

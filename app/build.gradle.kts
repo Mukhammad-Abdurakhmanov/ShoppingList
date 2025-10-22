@@ -1,6 +1,9 @@
 plugins {
     alias(libs.plugins.android.application)
     alias(libs.plugins.jetbrains.kotlin.android)
+
+    alias(libs.plugins.jetbrains.kotlin.kapt)
+
 }
 
 android {
@@ -34,7 +37,7 @@ android {
         jvmTarget = "1.8"
     }
     buildFeatures {
-        viewBinding = true
+        dataBinding = true
     }
 }
 
@@ -50,4 +53,25 @@ dependencies {
     testImplementation(libs.junit)
     androidTestImplementation(libs.androidx.junit)
     androidTestImplementation(libs.androidx.espresso.core)
+
+    // Корутины (основная библиотека)
+    implementation("org.jetbrains.kotlinx:kotlinx-coroutines-core:1.10.2")
+
+// Корутины для Android (с поддержкой жизненного цикла)
+    implementation("org.jetbrains.kotlinx:kotlinx-coroutines-android:1.10.2")
+
+// Корутины для ViewModel / LiveData (если работаешь с ними)
+    implementation("androidx.lifecycle:lifecycle-viewmodel-ktx:2.9.4")
+    implementation("androidx.lifecycle:lifecycle-livedata-ktx:2.9.4")
+
+    // Основная библиотека Room
+    implementation("androidx.room:room-runtime:2.8.2")
+
+// Компилятор аннотаций (обязательно)
+    kapt("androidx.room:room-compiler:2.8.2")
+
+// Поддержка корутин (чтобы можно было писать suspend-функции)
+    implementation("androidx.room:room-ktx:2.8.2")
+
+
 }
